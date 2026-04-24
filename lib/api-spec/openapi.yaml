@@ -1,0 +1,602 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Book Fair Sales Management API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: auth
+  - name: users
+  - name: products
+  - name: sales
+  - name: stats
+  - name: orders
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Username-only login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username]
+              properties:
+                username:
+                  type: string
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: Username not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a user (presenter or admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserBody"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /users/{id}:
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List all products
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+  /products/{id}:
+    patch:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /sales:
+    get:
+      operationId: listSales
+      tags: [sales]
+      summary: List sales (optionally filtered by user)
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sale"
+    post:
+      operationId: createSale
+      tags: [sales]
+      summary: Record a sale (decrements stock)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSaleBody"
+      responses:
+        "200":
+          description: Sale recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+        "400":
+          description: Insufficient stock
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /sales/{id}:
+    delete:
+      operationId: deleteSale
+      tags: [sales]
+      summary: Delete a sale and restore stock
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /orders:
+    get:
+      operationId: listOrders
+      tags: [orders]
+      summary: List all customer orders
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Place a customer order (public)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderBody"
+      responses:
+        "200":
+          description: Order placed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: Invalid request or insufficient stock
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /orders/{id}:
+    patch:
+      operationId: updateOrder
+      tags: [orders]
+      summary: Update an order's status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrderBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+    delete:
+      operationId: deleteOrder
+      tags: [orders]
+      summary: Delete an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /stats/summary:
+    get:
+      operationId: getSalesSummary
+      tags: [stats]
+      summary: Overall sales summary (revenue, units, low stock)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalesSummary"
+  /stats/by-presenter:
+    get:
+      operationId: getSalesByPresenter
+      tags: [stats]
+      summary: Sales totals grouped by presenter
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PresenterSales"
+  /stats/top-books:
+    get:
+      operationId: getTopBooks
+      tags: [stats]
+      summary: Best selling books
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopBook"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+    OkResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    User:
+      type: object
+      required: [id, username, isAdmin, createdAt]
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        isAdmin:
+          type: boolean
+        createdAt:
+          type: string
+    CreateUserBody:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+        isAdmin:
+          type: boolean
+          default: false
+
+    Product:
+      type: object
+      required: [id, name, stock, priceBuy, priceSell, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        coverImage:
+          type: string
+          nullable: true
+        stock:
+          type: integer
+        priceBuy:
+          type: number
+        priceSell:
+          type: number
+        createdAt:
+          type: string
+    CreateProductBody:
+      type: object
+      required: [name, stock, priceBuy, priceSell]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        coverImage:
+          type: string
+          nullable: true
+        stock:
+          type: integer
+          minimum: 0
+        priceBuy:
+          type: number
+          minimum: 0
+        priceSell:
+          type: number
+          minimum: 0
+    UpdateProductBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        coverImage:
+          type: string
+          nullable: true
+        stock:
+          type: integer
+          minimum: 0
+        priceBuy:
+          type: number
+          minimum: 0
+        priceSell:
+          type: number
+          minimum: 0
+
+    Sale:
+      type: object
+      required: [id, productId, productName, userId, username, quantity, unitPrice, totalPrice, createdAt]
+      properties:
+        id:
+          type: string
+        productId:
+          type: string
+        productName:
+          type: string
+        userId:
+          type: string
+        username:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        totalPrice:
+          type: number
+        buyerName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+    CreateSaleBody:
+      type: object
+      required: [productId, userId, quantity]
+      properties:
+        productId:
+          type: string
+        userId:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        buyerName:
+          type: string
+          nullable: true
+
+    SalesSummary:
+      type: object
+      required: [totalRevenue, totalUnits, totalSales, lowStockCount]
+      properties:
+        totalRevenue:
+          type: number
+        totalUnits:
+          type: integer
+        totalSales:
+          type: integer
+        lowStockCount:
+          type: integer
+    PresenterSales:
+      type: object
+      required: [userId, username, totalRevenue, totalUnits, totalSales]
+      properties:
+        userId:
+          type: string
+        username:
+          type: string
+        totalRevenue:
+          type: number
+        totalUnits:
+          type: integer
+        totalSales:
+          type: integer
+    Order:
+      type: object
+      required: [id, productId, productName, customerName, phone, quantity, unitPrice, totalPrice, status, createdAt]
+      properties:
+        id:
+          type: string
+        productId:
+          type: string
+        productName:
+          type: string
+        coverImage:
+          type: string
+          nullable: true
+        customerName:
+          type: string
+        phone:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        totalPrice:
+          type: number
+        status:
+          type: string
+        createdAt:
+          type: string
+    CreateOrderBody:
+      type: object
+      required: [productId, customerName, phone, quantity]
+      properties:
+        productId:
+          type: string
+        customerName:
+          type: string
+        phone:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+    UpdateOrderBody:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+        userId:
+          type: string
+          nullable: true
+
+    TopBook:
+      type: object
+      required: [productId, name, totalUnits, totalRevenue]
+      properties:
+        productId:
+          type: string
+        name:
+          type: string
+        coverImage:
+          type: string
+          nullable: true
+        totalUnits:
+          type: integer
+        totalRevenue:
+          type: number
