@@ -169,7 +169,7 @@ const dict = {
     backToShop: "العودة إلى المتجر",
 
     ourBooks: "معرض الكتاب",
-    browseAndOrder: "تصفح مجموعتنا وأرسل طلبك في ثوانٍ",
+    browseAndOrder: "تصفح مجموعتنا وأرسل طلبك في ثـــــــــــــــــوانٍ",
     cart: "السلة",
     cartEmpty: "سلتك فارغة",
     addToCart: "أضف إلى السلة",
